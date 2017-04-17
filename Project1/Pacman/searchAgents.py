@@ -80,7 +80,7 @@ class FroggerAgent(Agent):
     "[Command] python pacman.py -p FroggerAgent -l P1-2 -g StraightRandomGhost"
 
     def checkLegal(self, state, move, x, y, xG1, yG1, xG2, yG2):
-        "valueX and valueY: Check ghosts in the move direction"
+        # valueX and valueY: Check ghosts in the move direction
         valueX = []
         valueY = []
         if move == "East":
@@ -96,10 +96,10 @@ class FroggerAgent(Agent):
             valueX = [0, 1, -1, 0]
             valueY = [1, 1, 1, 2]
 
-        "If illegalCount == 0, there are no ghosts in this direction"
+        # If illegalCount == 0, there are no ghosts in this direction.
         illegalCount = 0
         if move in state.getLegalPacmanActions():
-            "Check Ghosts"
+            # Check Ghosts
             for i in range(0,4):
                 if (x+valueX[i] == xG1 and y+valueY[i] == yG1) or \
                 (x+valueX[i] == xG2 and y+valueY[i] == yG2):
@@ -120,18 +120,18 @@ class FroggerAgent(Agent):
         "The agent receives a GameState (defined in pacman.py)."
         "[Project 1] YOUR CODE HERE"
 
-        "G1: Only move west and east"
-        "G2: Only move north and south"
+        # G1: Only move west and east
+        # G2: Only move north and south
         xG1 = state.getGhostPosition(1)[0]
         yG1 = state.getGhostPosition(1)[1]
         xG2 = state.getGhostPosition(2)[0]
         yG2 = state.getGhostPosition(2)[1]
 
-        "Food's position"
+        # Food's position
         xFood = 8
         yFood = 1
 
-        "Agent's position"
+        # Agent's position
         x = state.getPacmanPosition()[0]
         y = state.getPacmanPosition()[1]
 
@@ -139,46 +139,81 @@ class FroggerAgent(Agent):
         valueX = []
         valueY = []
 
-        "The order of the direction"
+        # The order of the direction
         if x == xFood:
             if y < yFood:
-                directions = Directions.NORTH
+                direction = Directions.NORTH
             elif y > yFood:
-                directions = Directions.SOUTH
+                direction = Directions.SOUTH
         if y == yFood:
             if x < xFood:
-                directions = Directions.EAST
+                direction = Directions.EAST
             elif x > xFood:
-                directions = Directions.WEST
+                direction = Directions.WEST
         if (x-xFood)*(x-xFood) > (y-yFood)*(y-yFood):
-            directions = Directions.EAST
+            direction = Directions.EAST
         elif (x-xFood)*(x-xFood) < (y-yFood)*(y-yFood):
-            directions = Directions.SOUTH
+            direction = Directions.SOUTH
         else:
-            directions = Directions.EAST
+            direction = Directions.EAST
 
-        "Check legal direction"
-        if self.checkLegal(state, directions, x, y, xG1, yG1, xG2, yG2):
+        # Check legal direction
+        if self.checkLegal(state, direction, x, y, xG1, yG1, xG2, yG2):
             return directions
-        elif self.checkLegal(state, Directions.RIGHT[directions], x, y, xG1, yG1, xG2, yG2):
-            return Directions.RIGHT[directions]
-        elif self.checkLegal(state, Directions.REVERSE[directions], x, y, xG1, yG1, xG2, yG2):
-            return Directions.REVERSE[directions]
-        elif self.checkLegal(state, Directions.LEFT[directions], x, y, xG1, yG1, xG2, yG2):
-            return Directions.LEFT[directions]
+        elif self.checkLegal(state, Directions.RIGHT[direction], x, y, xG1, yG1, xG2, yG2):
+            return Directions.RIGHT[direction]
+        elif self.checkLegal(state, Directions.REVERSE[direction], x, y, xG1, yG1, xG2, yG2):
+            return Directions.REVERSE[direction]
+        elif self.checkLegal(state, Directions.LEFT[direction], x, y, xG1, yG1, xG2, yG2):
+            return Directions.LEFT[direction]
 
-        return Directions.REVERSE[directions]
+        return Directions.REVERSE[direction]
         return Directions.STOP
         
 "P1-3"
 class SnakeAgent(Agent):
     "But you don't have a sneaking suit."
-    "[Command] python pacman.py -p CleanerAgent -l P1-1"
-    
+    "[Command] python pacman.py -p FroggerAgent -l P1-3 -g StraightRandomGhost"
+
+    def actionDodge(self, state, direction):
+        if Directions.LEFT[direction] in state.getLegalPacmanActions():
+            return Directions.LEFT[direction]
+        if Directions.RIGHT[direction] in state.getLegalPacmanActions():
+            return Directions.RIGHT[direction]
+        if Directions.REVERSE[direction] in state.getLegalPacmanActions():
+            return Directions.REVERSE[direction]
+
     def getAction(self, state):
         "The agent receives a GameState (defined in pacman.py)."
         "[Project 1] YOUR CODE HERE"
-        
+
+        # G1 and G2: Only move left and right, with y fixed.
+        xG1 = state.getGhostPosition(1)[0]
+        xG2 = state.getGhostPosition(2)[0]
+        yG  = state.getGhostPosition(2)[1]
+
+        # Agent's position
+        x = state.getPacmanPosition()[0]
+        y = state.getPacmanPosition()[1]
+
+        # When being on the same line
+        if y == yG:
+            if (x < xG1 and x+2 >= xG1) or (x < xG2 and x+2 >= xG2):
+                return self.actionDodge(state, Directions.EAST)
+            elif (x > xG1 and x-2 <= xG1) or (x > xG2 and x-2 <= xG2):
+                return self.actionDodge(state, Directions.WEST)
+            elif Directions.EAST in state.getLegalPacmanActions():
+                return Directions.EAST
+
+        # When being in the hole
+        if abs(y-yG) == 1:
+            if abs(x-xG1) > 1 and abs(x-xG2) > 1:
+                return Directions.SOUTH if (y > yG) else Directions.NORTH
+            else:
+                return Directions.NORTH if (y > yG) else Directions.SOUTH
+        if abs(y-yG) == 2:
+            return Directions.SOUTH if (y > yG) else Directions.NORTH
+
         return Directions.STOP
         
 "P1-4"

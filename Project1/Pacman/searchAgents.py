@@ -40,7 +40,6 @@ from game import Actions
 import util
 import time
 import search
-import layout
 
 class GoWestAgent(Agent):
     "An agent that goes West until it can't."
@@ -55,10 +54,13 @@ class GoWestAgent(Agent):
 "P1-1"
 class CleanerAgent(Agent):
     "The floor is too dirty."
-    
+    "[Command] python pacman.py -p CleanerAgent -l P1-1"
+
     def getAction(self, state):
         "The agent receives a GameState (defined in pacman.py)."
         "[Project 1] YOUR CODE HERE"
+
+        "Get the pacman's position (x,y)"
         x = state.getPacmanPosition()[0]
         y = state.getPacmanPosition()[1]
         if state.hasFood(x+1, y):
@@ -75,16 +77,103 @@ class CleanerAgent(Agent):
 "P1-2"
 class FroggerAgent(Agent):
     "It's dangerous to cross streets with eyes closed."
-    
+    "[Command] python pacman.py -p FroggerAgent -l P1-2 -g StraightRandomGhost"
+
+    def checkLegal(self, state, move, x, y, xG1, yG1, xG2, yG2):
+        "valueX and valueY: Check ghosts in the move direction"
+        valueX = []
+        valueY = []
+        if move == "East":
+            valueX = [1, 1, 1, 2]
+            valueY = [0, 1, -1, 0]
+        elif move == "South":
+            valueX = [0, 1, -1, 0]
+            valueY = [-1, -1, -1, -2]
+        elif move == "West":
+            valueX = [-1, -1, -1, -2]
+            valueY = [0, 1, -1, 0]
+        elif move == "North":
+            valueX = [0, 1, -1, 0]
+            valueY = [1, 1, 1, 2]
+
+        "If illegalCount == 0, there are no ghosts in this direction"
+        illegalCount = 0
+        if move in state.getLegalPacmanActions():
+            "Check Ghosts"
+            for i in range(0,4):
+                if (x+valueX[i] == xG1 and y+valueY[i] == yG1) or \
+                (x+valueX[i] == xG2 and y+valueY[i] == yG2):
+                    illegalCount += 1
+                if (move == "East" or move == "West") and (x+valueX[3] == xG1 and y == yG1):
+                    illegalCount += 1
+                elif (move == "North" or move == "South") and (x == xG2 and y+valueY[3] == yG2):
+                    illegalCount += 1
+
+            if illegalCount == 0:
+                return True
+            else:
+                return False
+        else:
+            return False
+
     def getAction(self, state):
         "The agent receives a GameState (defined in pacman.py)."
         "[Project 1] YOUR CODE HERE"
-        
+
+        "G1: Only move west and east"
+        "G2: Only move north and south"
+        xG1 = state.getGhostPosition(1)[0]
+        yG1 = state.getGhostPosition(1)[1]
+        xG2 = state.getGhostPosition(2)[0]
+        yG2 = state.getGhostPosition(2)[1]
+
+        "Food's position"
+        xFood = 8
+        yFood = 1
+
+        "Agent's position"
+        x = state.getPacmanPosition()[0]
+        y = state.getPacmanPosition()[1]
+
+        directions = []
+        valueX = []
+        valueY = []
+
+        "The order of the direction"
+        if x == xFood:
+            if y < yFood:
+                directions = Directions.NORTH
+            elif y > yFood:
+                directions = Directions.SOUTH
+        if y == yFood:
+            if x < xFood:
+                directions = Directions.EAST
+            elif x > xFood:
+                directions = Directions.WEST
+        if (x-xFood)*(x-xFood) > (y-yFood)*(y-yFood):
+            directions = Directions.EAST
+        elif (x-xFood)*(x-xFood) < (y-yFood)*(y-yFood):
+            directions = Directions.SOUTH
+        else:
+            directions = Directions.EAST
+
+        "Check legal direction"
+        if self.checkLegal(state, directions, x, y, xG1, yG1, xG2, yG2):
+            return directions
+        elif self.checkLegal(state, Directions.RIGHT[directions], x, y, xG1, yG1, xG2, yG2):
+            return Directions.RIGHT[directions]
+        elif self.checkLegal(state, Directions.REVERSE[directions], x, y, xG1, yG1, xG2, yG2):
+            return Directions.REVERSE[directions]
+        elif self.checkLegal(state, Directions.LEFT[directions], x, y, xG1, yG1, xG2, yG2):
+            return Directions.LEFT[directions]
+
+        return Directions.REVERSE[directions]
         return Directions.STOP
         
 "P1-3"
 class SnakeAgent(Agent):
     "But you don't have a sneaking suit."
+    "[Command] python pacman.py -p CleanerAgent -l P1-1"
     
     def getAction(self, state):
         "The agent receives a GameState (defined in pacman.py)."
@@ -95,6 +184,7 @@ class SnakeAgent(Agent):
 "P1-4"
 class DodgeAgent(Agent):
     "You can run, but you can't hide."
+    "[Command] python pacman.py -p CleanerAgent -l P1-1"
     
     def getAction(self, state):
         "The agent receives a GameState (defined in pacman.py)."

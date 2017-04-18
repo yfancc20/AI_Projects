@@ -159,6 +159,57 @@ def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
     
     "[Project 2] YOUR CODE HERE"
+    "[Command] python pacman.py -l mediumMaze -p SearchAgent -a fn=bfs"
+    from util import Queue
+
+    # Queue Instance and some lists
+    queueBFS = Queue()
+    route = []
+    visit = []
+    predecessorsList = []
+
+    # deal with start point independent
+    start = problem.getStartState()
+    queueBFS.push(start)
+    visit.append(start)
+
+    # VFS function
+    # BFS search
+    while not queueBFS.isEmpty():
+        # popping from the queueBFS
+        currentPos = queueBFS.pop()
+
+        # getting the successors
+        successors = problem.getSuccessors(currentPos)
+
+        # check isGoal or not
+        if problem.isGoalState(currentPos):
+            goal = currentPos
+            break
+
+        # push successors
+        # pos[0]: position, pos[1]: action
+        # predecessorsList: [indexPos, indexPos's predecessor, this action]
+        if len(successors) > 0:
+            for pos in successors:
+                if not pos[0] in visit:
+                    queueBFS.push(pos[0])
+                    visit.append(pos[0])
+                    predecessorsList.append([pos[0], currentPos, pos[1]])
+
+    # Build the route from the goal
+    indexPos = goal
+    while 1:
+        for i in range(0, len(predecessorsList)):
+            if indexPos == predecessorsList[i][0]:
+                # always inserting to the first
+                route.insert(0, predecessorsList[i][2])
+                indexPos = predecessorsList[i][1]
+        # when reaching start, done
+        if indexPos == start:
+            break
+
+    return route
     
     util.raiseNotDefined()
 

@@ -219,12 +219,74 @@ class SnakeAgent(Agent):
 "P1-4"
 class DodgeAgent(Agent):
     "You can run, but you can't hide."
-    "[Command] python pacman.py -p CleanerAgent -l P1-1"
+    "[Command] python pacman.py -p DodgeAgent -l P1-4"
     
+    def actionDodge(self, state, direction, x, y, xG, yG):
+        # There are four corners to deal with
+        
+        if abs(x-xG) <= 4 and abs(y-yG) <= 4:
+            if x == xG:
+                if x == 8 and y == 8:
+                    return Directions.WEST
+                elif x == 1 and y == 8:
+                    return Directions.EAST
+                elif x == 1 and y == 1:
+                    return Directions.EAST
+                elif y > yG:
+                    return Directions.REVERSE[direction]
+                elif y < yG:
+                    return direction
+            elif y == yG:
+                if x == 8 and y == 8:
+                    return Directions.SOUTH
+                elif x == 1 and y == 8:
+                    return Directions.SOUTH
+                elif x == 1 and y == 1:
+                    return Directions.NORTH
+                elif x < xG:
+                    return Directions.REVERSE[direction]
+                elif x > xG:
+                    return direction
+            elif (x > xG and y > yG) and (y-1 < 8-xG):
+                return direction
+            elif (x < xG and y < yG) and (8-x < yG-1):
+                return direction
+            elif (x < xG and y < yG and x == 1) or (x > xG and y < yG):
+                return direction
+            else:
+                return Directions.REVERSE[direction]
+        else:
+            return direction
+
     def getAction(self, state):
         "The agent receives a GameState (defined in pacman.py)."
         "[Project 1] YOUR CODE HERE"
+
+        # Ghost's position
+        xG = state.getGhostPosition(1)[0]
+        yG = state.getGhostPosition(1)[1]
+
+        # Agent's position
+        x = state.getPacmanPosition()[0]
+        y = state.getPacmanPosition()[1]
+
+        # Food's position
+        xF = 8
+        yF = 1
+
+        directions = []
+
+        if xF-x <= y-yF:
+            directions = [Directions.EAST, Directions.SOUTH]
+        elif xF-x > y-yF:
+            directions = [Directions.SOUTH, Directions.EAST]
+
+            
         
+        for i in range(0,2):
+            if directions[i] in state.getLegalPacmanActions():
+                return self.actionDodge(state, directions[i], x, y, xG, yG)
+
         return Directions.STOP
 
 #######################################################

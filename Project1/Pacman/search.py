@@ -89,6 +89,7 @@ def depthFirstSearch(problem):
     """
     
     "[Project 2] YOUR CODE HERE"
+    "[Command] python pacman.py -l mediumMaze -p SearchAgent -a fn=dfs"
     from util import Stack
 
     # stack instance, route list, visit list
@@ -101,35 +102,32 @@ def depthFirstSearch(problem):
     step = 0
     stackStep = []
 
-    # deal with start point independent
+    # start point
     start = problem.getStartState()
-    successors = problem.getSuccessors(start)
-    visit.append(start)
-    legalSuccessors = 0 # reset the number of Successors which are legal
-    for pos in successors:
-        stackDFS.push(pos)
-        visit.append(pos[0])
-        legalSuccessors += 1
-    if legalSuccessors > 1: # discuss below
-        for i in range(0, legalSuccessors-1):
-            stackStep.append(step)
+    stackDFS.push(start)
+    first = True
 
     # DFS function
     # DFS search when routing
     while not stackDFS.isEmpty():
         # step increasing and popping from the stackDFS
-        step += 1
-        currentState = stackDFS.pop()
-        currentPos = currentState[0]
-        currentAction = currentState[1]
-
-        # getting the successors and building the route
-        successors = problem.getSuccessors(currentPos)
-        route.append(currentAction)
+        if first: # start point is independent
+            currentPos = stackDFS.pop()
+            first = False
+        else:
+            step += 1
+            currentState = stackDFS.pop()
+            currentPos = currentState[0]
+            currentAction = currentState[1]
+            # building the route
+            route.append(currentAction)
 
         # check isGoal or not
         if problem.isGoalState(currentPos):
             break
+
+        # getting the successors
+        successors = problem.getSuccessors(currentPos)
 
         # push successors
         # pos[0]: position
@@ -161,7 +159,6 @@ def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
     
     "[Project 2] YOUR CODE HERE"
-    from util import Queue  
     
     util.raiseNotDefined()
 

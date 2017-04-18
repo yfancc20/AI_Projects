@@ -89,6 +89,70 @@ def depthFirstSearch(problem):
     """
     
     "[Project 2] YOUR CODE HERE"
+    from util import Stack
+
+    # stack instance, route list, visit list
+    stackDFS = Stack()
+    route = []
+    visit = []
+
+    # step: current step
+    # stackStep: return the step encountering intersection
+    step = 0
+    stackStep = []
+
+    # deal with start point independent
+    start = problem.getStartState()
+    successors = problem.getSuccessors(start)
+    visit.append(start)
+    legalSuccessors = 0 # reset the number of Successors which are legal
+    for pos in successors:
+        stackDFS.push(pos)
+        visit.append(pos[0])
+        legalSuccessors += 1
+    if legalSuccessors > 1: # discuss below
+        for i in range(0, legalSuccessors-1):
+            stackStep.append(step)
+
+    # DFS function
+    # DFS search when routing
+    while not stackDFS.isEmpty():
+        # step increasing and popping from the stackDFS
+        step += 1
+        currentState = stackDFS.pop()
+        currentPos = currentState[0]
+        currentAction = currentState[1]
+
+        # getting the successors and building the route
+        successors = problem.getSuccessors(currentPos)
+        route.append(currentAction)
+
+        # check isGoal or not
+        if problem.isGoalState(currentPos):
+            break
+
+        # push successors
+        # pos[0]: position
+        legalSuccessors = 0
+        if len(successors) > 0:
+            for pos in successors:
+                if not pos[0] in visit:
+                    stackDFS.push(pos)
+                    visit.append(pos[0])
+                    legalSuccessors += 1
+
+        # if there is a intersection, recording this step(checkpoint)
+        # ex: two directions, recording once; three directions, recording twice.
+        if legalSuccessors > 1:
+            for i in range(0, legalSuccessors-1):
+                stackStep.append(step)
+
+        # No way to go
+        if legalSuccessors == 0:
+            step = stackStep.pop() # back to the checkpoint
+            route = route[0:step]  # delete the route after last checkpoint
+
+    return route
     
     util.raiseNotDefined()
 
@@ -96,7 +160,8 @@ def depthFirstSearch(problem):
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
     
-    "[Project 2] YOUR CODE HERE"    
+    "[Project 2] YOUR CODE HERE"
+    from util import Queue  
     
     util.raiseNotDefined()
 

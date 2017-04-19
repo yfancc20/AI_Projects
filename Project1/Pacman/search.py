@@ -230,7 +230,100 @@ def aStarSearch(problem, heuristic=nullHeuristic):
     "print heuristic(problem.getStartState(), problem)"
     
     "[Project 2] YOUR CODE HERE"
-    
+    "[Command] python pacman.py -l bigMaze -p SearchAgent -a fn=astar,heuristic=manhattanHeuristic"
+
+    def getG(preG, cost):
+        return preG + cost
+
+    def getH(position):
+        return heuristic(position, problem)
+
+    def getF(g, h):
+        return g + h
+
+    from util import PriorityQueue
+
+    queueAstar = PriorityQueue()
+    predecessorsList = {}
+
+    start = problem.getStartState()
+    route = []
+    openList = []
+    closeList = []
+    valueList = {}
+    predecessorsList = {}
+
+    currentG = 0
+    currentH = heuristic(start, problem)
+    currentF = getF(currentG, currentH)
+    valueList[start] = {'F': currentF, 'G': currentG, 'H': currentH}
+    queueAstar.push(start, currentF)
+    openList.append(start)
+    first = True
+
+    while not queueAstar.isEmpty():
+        # pop from the queue, put into cloesList
+        currentPos = queueAstar.pop()
+
+        """
+        check is removed and add into closeList or not
+        because queueAstar cannot change the priority
+        it can only add new items with same pos but different priority
+        so we should check here if this one is already in closeList
+        """
+        if currentPos in closeList:
+            continue
+
+        # reaching goal, break the loop(searching)
+        if problem.isGoalState(currentPos):
+            goal = currentPos
+            break
+
+
+        currentG = valueList[currentPos]['G']
+        currentH = valueList[currentPos]['H']
+        currentF = valueList[currentPos]['F']
+
+
+        closeList.append(currentPos)
+        openList.remove(currentPos)
+
+        # get successors
+        successors = problem.getSuccessors(currentPos)
+
+        for pos in successors:
+            if pos[0] in openList: # already be found
+                # check G and update valueList or not
+                nextG = getG(valueList[currentPos]['G'], pos[2])
+                if nextG < valueList[pos[0]]['G']:
+                    valueList[pos[0]]['G'] = nextG
+                    nextF = getF(nextG, valueList[pos[0]]['H'])
+                    valueList[pos[0]]['F'] = nextF
+                    queueAstar.push(pos[0], nextF)
+                    # update the parent
+                    predecessorsList[pos[0]] = {'parent': currentPos, 'action': pos[1]}
+
+            elif not pos[0] in closeList: # first be found
+                openList.append(pos[0]) # add to openList
+                # predecessorList[index]:{'parent', 'action'}
+                predecessorsList[pos[0]] = {'parent': currentPos, 'action': pos[1]}
+                # calculate F = G + H, and store it in valueList
+                nextG = getG(valueList[currentPos]['G'], pos[2])
+                nextH = heuristic(pos[0], problem)
+                nextF = getF(nextG, nextH)
+                valueList[pos[0]] = {'F': nextF, 'G': nextG, 'H': nextH}
+                queueAstar.push(pos[0], nextF)
+
+    indexPos = goal
+    while 1:
+        action = predecessorsList[indexPos]['action']
+        route.insert(0, action)
+        indexPos = predecessorsList[indexPos]['parent']
+        # when reaching start, break
+        if indexPos == start:
+            break  
+
+    return route
     util.raiseNotDefined()
 
 

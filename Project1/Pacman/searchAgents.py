@@ -159,13 +159,14 @@ class FroggerAgent(Agent):
 
         # Check legal direction
         if self.checkLegal(state, direction, x, y, xG1, yG1, xG2, yG2):
-            return directions
+            return direction
         elif self.checkLegal(state, Directions.RIGHT[direction], x, y, xG1, yG1, xG2, yG2):
             return Directions.RIGHT[direction]
         elif self.checkLegal(state, Directions.REVERSE[direction], x, y, xG1, yG1, xG2, yG2):
             return Directions.REVERSE[direction]
         elif self.checkLegal(state, Directions.LEFT[direction], x, y, xG1, yG1, xG2, yG2):
             return Directions.LEFT[direction]
+
 
         return Directions.REVERSE[direction]
         return Directions.STOP

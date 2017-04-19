@@ -101,12 +101,18 @@ def depthFirstSearch(problem):
     # start point
     start = problem.getStartState()
     stackDFS.push(start)
-    visit.append(start)
+    
 
     # DFS search when routing
     while not stackDFS.isEmpty():
         # step increasing and popping from the stackDFS
         currentPos = stackDFS.pop()
+
+        # visited or not
+        if currentPos in visit:
+            continue
+        else:
+            visit.append(currentPos)
 
         # check isGoal or not
         if problem.isGoalState(currentPos):
@@ -122,7 +128,6 @@ def depthFirstSearch(problem):
             legalAction = pos[1]
             if not legalPos in visit:
                 stackDFS.push(legalPos)
-                visit.append(legalPos)
                 predecessorsList[legalPos] = {'parent': currentPos, 'action': legalAction}
 
 
@@ -159,20 +164,25 @@ def breadthFirstSearch(problem):
     # deal with start point independent
     start = problem.getStartState()
     queueBFS.push(start)
-    visit.append(start)
 
     # BFS search
     while not queueBFS.isEmpty():
         # popping from the queueBFS
         currentPos = queueBFS.pop()
 
-        # getting the successors
-        successors = problem.getSuccessors(currentPos)
+        # visited or not
+        if currentPos in visit:
+            continue
+        else:
+            visit.append(currentPos)
 
         # check isGoal or not
         if problem.isGoalState(currentPos):
             goal = currentPos
             break
+
+        # getting the successors
+        successors = problem.getSuccessors(currentPos)
 
         # push successors
         for pos in successors:
@@ -180,7 +190,6 @@ def breadthFirstSearch(problem):
             legalAction = pos[1]
             if not legalPos in visit:
                 queueBFS.push(legalPos)
-                visit.append(legalPos)
                 predecessorsList[legalPos] = {'parent': currentPos, 'action': legalAction}
 
     # Build the route from the goal

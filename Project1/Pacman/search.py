@@ -92,63 +92,51 @@ def depthFirstSearch(problem):
     "[Command] python pacman.py -l mediumMaze -p SearchAgent -a fn=dfs"
     from util import Stack
 
-    # stack instance, route list, visit list
+    # stack instance, some lists
     stackDFS = Stack()
     route = []
     visit = []
-
-    # step: current step
-    # stackStep: return the step encountering intersection
-    step = 0
-    stackStep = []
+    predecessorsList = {}
 
     # start point
     start = problem.getStartState()
     stackDFS.push(start)
-    first = True
+    visit.append(start)
 
-    # DFS function
     # DFS search when routing
     while not stackDFS.isEmpty():
         # step increasing and popping from the stackDFS
-        if first: # start point is independent
-            currentPos = stackDFS.pop()
-            first = False
-        else:
-            step += 1
-            currentState = stackDFS.pop()
-            currentPos = currentState[0]
-            currentAction = currentState[1]
-            # building the route
-            route.append(currentAction)
+        currentPos = stackDFS.pop()
 
         # check isGoal or not
         if problem.isGoalState(currentPos):
+            goal = currentPos
             break
 
         # getting the successors
         successors = problem.getSuccessors(currentPos)
 
         # push successors
-        # pos[0]: position
-        legalSuccessors = 0
-        if len(successors) > 0:
-            for pos in successors:
-                if not pos[0] in visit:
-                    stackDFS.push(pos)
-                    visit.append(pos[0])
-                    legalSuccessors += 1
+        for pos in successors:
+            legalPos = pos[0]
+            legalAction = pos[1]
+            if not legalPos in visit:
+                stackDFS.push(legalPos)
+                visit.append(legalPos)
+                predecessorsList[legalPos] = {'parent': currentPos, 'action': legalAction}
 
-        # if there is a intersection, recording this step(checkpoint)
-        # ex: two directions, recording once; three directions, recording twice.
-        if legalSuccessors > 1:
-            for i in range(0, legalSuccessors-1):
-                stackStep.append(step)
 
-        # No way to go
-        if legalSuccessors == 0:
-            step = stackStep.pop() # back to the checkpoint
-            route = route[0:step]  # delete the route after last checkpoint
+    # backstrack the route
+    indexPos = goal
+    while 1:
+        action = predecessorsList[indexPos]['action']
+        # always add to the first
+        # because the action is from goal to start
+        route.insert(0, action)
+        indexPos = predecessorsList[indexPos]['parent']
+        # when reaching start point
+        if indexPos == start:
+            break
 
     return route
     
@@ -166,14 +154,13 @@ def breadthFirstSearch(problem):
     queueBFS = Queue()
     route = []
     visit = []
-    predecessorsList = []
+    predecessorsList = {}
 
     # deal with start point independent
     start = problem.getStartState()
     queueBFS.push(start)
     visit.append(start)
 
-    # VFS function
     # BFS search
     while not queueBFS.isEmpty():
         # popping from the queueBFS
@@ -188,23 +175,21 @@ def breadthFirstSearch(problem):
             break
 
         # push successors
-        # pos[0]: position, pos[1]: action
-        # predecessorsList: [indexPos, indexPos's predecessor, this action]
-        if len(successors) > 0:
-            for pos in successors:
-                if not pos[0] in visit:
-                    queueBFS.push(pos[0])
-                    visit.append(pos[0])
-                    predecessorsList.append([pos[0], currentPos, pos[1]])
+        for pos in successors:
+            legalPos = pos[0]
+            legalAction = pos[1]
+            if not legalPos in visit:
+                queueBFS.push(legalPos)
+                visit.append(legalPos)
+                predecessorsList[legalPos] = {'parent': currentPos, 'action': legalAction}
 
     # Build the route from the goal
     indexPos = goal
     while 1:
-        for i in range(0, len(predecessorsList)):
-            if indexPos == predecessorsList[i][0]:
-                # always inserting to the first
-                route.insert(0, predecessorsList[i][2])
-                indexPos = predecessorsList[i][1]
+        action = predecessorsList[indexPos]['action']
+        # add to the first because the result is from goal to start
+        route.insert(0, action)
+        indexPos = predecessorsList[indexPos]['parent']
         # when reaching start, done
         if indexPos == start:
             break
@@ -232,6 +217,7 @@ def aStarSearch(problem, heuristic=nullHeuristic):
     "[Project 2] YOUR CODE HERE"
     "[Command] python pacman.py -l bigMaze -p SearchAgent -a fn=astar,heuristic=manhattanHeuristic"
 
+    # functions F = G + H
     def getG(preG, cost):
         return preG + cost
 
@@ -243,76 +229,78 @@ def aStarSearch(problem, heuristic=nullHeuristic):
 
     from util import PriorityQueue
 
+    # PriorityQueue instance and some lists
     queueAstar = PriorityQueue()
-    predecessorsList = {}
-
-    start = problem.getStartState()
     route = []
-    openList = []
-    closeList = []
-    valueList = {}
+    openList = []   # list of nodes found but not visited
+    closeList = []  # list of visited
+    valueList = {}  # values of f(n), g(n). h(n)
     predecessorsList = {}
 
+    # start point
+    start = problem.getStartState()
     currentG = 0
     currentH = heuristic(start, problem)
     currentF = getF(currentG, currentH)
     valueList[start] = {'F': currentF, 'G': currentG, 'H': currentH}
     queueAstar.push(start, currentF)
     openList.append(start)
-    first = True
 
     while not queueAstar.isEmpty():
-        # pop from the queue, put into cloesList
+        # pop from the queue
         currentPos = queueAstar.pop()
 
         """
         check is removed and add into closeList or not
         because queueAstar cannot change the priority
         it can only add new items with same pos but different priority
-        so we should check here if this one is already in closeList
+        so we should check here and pass if this one is already in closeList
         """
         if currentPos in closeList:
             continue
 
-        # reaching goal, break the loop(searching)
+        # if reaching goal, break the loop(searching)
         if problem.isGoalState(currentPos):
             goal = currentPos
             break
 
+        # remove from openList and add to closeList
+        closeList.append(currentPos)
+        openList.remove(currentPos)
 
+        # get it's f(n) g(n) h(n)
         currentG = valueList[currentPos]['G']
         currentH = valueList[currentPos]['H']
         currentF = valueList[currentPos]['F']
-
-
-        closeList.append(currentPos)
-        openList.remove(currentPos)
 
         # get successors
         successors = problem.getSuccessors(currentPos)
 
         for pos in successors:
-            if pos[0] in openList: # already be found
+            legalPos = pos[0]
+            legalAction = pos[1]
+            legalCost = pos[2]
+            if legalPos in openList: # already be found
                 # check G and update valueList or not
-                nextG = getG(valueList[currentPos]['G'], pos[2])
-                if nextG < valueList[pos[0]]['G']:
-                    valueList[pos[0]]['G'] = nextG
-                    nextF = getF(nextG, valueList[pos[0]]['H'])
-                    valueList[pos[0]]['F'] = nextF
-                    queueAstar.push(pos[0], nextF)
+                nextG = getG(currentG, legalCost)
+                if nextG < valueList[legalPos]['G']:
+                    valueList[legalPos]['G'] = nextG
+                    nextF = getF(nextG, valueList[legalPos]['H'])
+                    valueList[legalPos]['F'] = nextF
+                    queueAstar.push(legalPos, nextF) # add this node to queue again!
                     # update the parent
-                    predecessorsList[pos[0]] = {'parent': currentPos, 'action': pos[1]}
+                    predecessorsList[legalPos] = {'parent': currentPos, 'action': legalAction}
 
-            elif not pos[0] in closeList: # first be found
-                openList.append(pos[0]) # add to openList
+            elif not legalPos in closeList: # first be found
+                openList.append(legalPos) # add to openList
                 # predecessorList[index]:{'parent', 'action'}
-                predecessorsList[pos[0]] = {'parent': currentPos, 'action': pos[1]}
+                predecessorsList[legalPos] = {'parent': currentPos, 'action': legalAction}
                 # calculate F = G + H, and store it in valueList
-                nextG = getG(valueList[currentPos]['G'], pos[2])
-                nextH = heuristic(pos[0], problem)
+                nextG = getG(valueList[currentPos]['G'], legalCost)
+                nextH = heuristic(legalPos, problem)
                 nextF = getF(nextG, nextH)
-                valueList[pos[0]] = {'F': nextF, 'G': nextG, 'H': nextH}
-                queueAstar.push(pos[0], nextF)
+                valueList[legalPos] = {'F': nextF, 'G': nextG, 'H': nextH}
+                queueAstar.push(legalPos, nextF)
 
     indexPos = goal
     while 1:

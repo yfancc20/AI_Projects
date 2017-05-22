@@ -44,10 +44,6 @@ class ReflexAgent(Agent):
 
         # current pos
         currentPos = gameState.getPacmanPosition();
-        # print 'Now: %s' % (str(currentPos))
-
-        # # Let Capsules be a kind of food
-        # gameState.getFood()[23][1] = True
 
         # Choose one of the best actions
         scores = [self.evaluationFunction(gameState, action) for action in legalMoves]
@@ -56,9 +52,11 @@ class ReflexAgent(Agent):
         chosenIndex = random.choice(bestIndices) # Pick randomly among the best
 
         "Add more of your code here if you want to"
-        # pause for a while
+
+        # debugging output
         # print 'next: %s' % (legalMoves[chosenIndex])
         # raw_input()
+
         return legalMoves[chosenIndex]
 
     def evaluationFunction(self, currentGameState, action):
@@ -78,6 +76,7 @@ class ReflexAgent(Agent):
         """
         # Useful information you can extract from a GameState (pacman.py)
         "[Project 3] YOUR CODE HERE"
+
         # Map Information: 9*25 here, including walls
         mapWidth = 23
         mapHeight = 7
@@ -89,13 +88,18 @@ class ReflexAgent(Agent):
         newPos = successorGameState.getPacmanPosition()
         newX, newY = [newPos[0], newPos[1]]      
 
-        # Features and Weights: Ghost > Food > Capsule
+        """ 
+        kinds of features 
+        """
         def featureGhost(newX, newY, state):
+            """ Feature about Ghosts """
+
             # Ghost Information
             newGhostStates = state.getGhostStates()
             newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
             ghostPos = state.getGhostPosition(1)
             ghostX, ghostY = [ghostPos[0], ghostPos[1]]
+
             # featureScore
             fScore = 0
             if abs(newX-ghostX) == 0 and abs(newY-ghostY) == 0:
@@ -104,12 +108,18 @@ class ReflexAgent(Agent):
                 fScore = -20
             return fScore
 
-        def featureFood(newX, newY, state, action):
 
-            newFoodExist = state.hasFood(newX, newY)
+        def featureFood(newX, newY, state, action):
+            """ Feature about Food """
+
             fScore = 0
+
+            # have food to eat
+            newFoodExist = state.hasFood(newX, newY)
             if newFoodExist == True:
                 fScore += 20
+
+            # some lists of each action
             if action == "West":
                 dx = [-2, -1, 0, -2, -1, 0, -2, -1, 0]
                 dy = [1, 1, 1, 0, 0, 0, -1, -1, -1]
@@ -129,12 +139,15 @@ class ReflexAgent(Agent):
             elif action == "Stop":
                 return 0
 
+            # count food around the newPos (3x3)
             for i in range(9):
                 countX = newX + dx[i]
                 countY = newY + dy[i]
                 if countX > 0 and countX < 25 and countY > 0 and countY < 9:
                     if state.hasFood(countX, countY):
                         fScore += 1
+
+            # count food from the action's direction
             minValue = 100
             for y in range(yStart, yEnd, 1):
                 for x in range(xStart, xEnd, 1):
@@ -147,15 +160,21 @@ class ReflexAgent(Agent):
 
             return fScore
 
+
         def featureCapsule(newX, newY, state):
-            newCapsule = state.getCapsules()
+            """ Feature about Capsule """
+
             fScore = 0
+
+            # Capsules are eaten or not
+            newCapsule = state.getCapsules()
             if len(newCapsule) > 0:
                 capsuleX, capsuleY = [newCapsule[0][0], newCapsule[0][1]]
             else:
                 fScore = 0
                 return fScore
 
+            # Distance to capsule
             if newX == capsuleX and newY == capsuleY:
                 fScore += 30
             elif abs(newX-capsuleX) <= 1 and abs(newY-capsuleY) <= 1:
@@ -167,6 +186,8 @@ class ReflexAgent(Agent):
 
             return fScore
 
+
+        # Each kind of feature's weight and function
         w1 = 5
         f1 = featureGhost(newX, newY, successorGameState)
         w2 = 1
@@ -175,10 +196,11 @@ class ReflexAgent(Agent):
         f3 = featureCapsule(newX, newY, currentGameState)
         evalScore = w1 * f1 + w2 * f2 + w3 * f3
 
+        # debugging output
         # print '%s, (%d %d %d) => %d' % (action, f1, f2, f3, evalScore)
-        # information output string
         # print 'next:(%d,%d); Food:%s; ghost:(%d,%d)' % (newX, newY, newFoodExist, ghostX, ghostY)
-        
+  
+        # return final score      
         return evalScore
 
 def scoreEvaluationFunction(currentGameState):
@@ -235,28 +257,36 @@ class MinimaxAgent(MultiAgentSearchAgent):
         """
         
         "[Project 3] YOUR CODE HERE" 
-
+        """ Functions of Min-Max """
         def minimax(state, depth, agentIndex):
+            """ Min-Max head function"""
+
             agentNum = state.getNumAgents()
-            
+
+            # Terminal-state or maximum depth
             if depth == 0 or state.isLose() or state.isWin():
                 return {'value': self.evaluationFunction(state)}
 
+            # Pacman: maxValue; Ghost: minValue
             if agentIndex == 0:
                 return maxValue(state, depth, agentIndex)
             else:
                 return minValue(state, depth, agentIndex)
 
+
         def maxValue(state, depth, agentIndex):
+            """ Function of Max-Value"""
+
             legalMoves = state.getLegalActions(agentIndex)
             agentNum = state.getNumAgents()
-            # print '(maxValue-- agent: %d, depth: %d)' % (agentIndex, depth)
 
+            # next agent's index
             if agentIndex == agentNum - 1:
                 nextAgentIndex = 0
             else:
                 nextAgentIndex = agentIndex + 1
 
+            # Find the best value(action), maximum
             bestValue = -10000
             actionList = []
             for action in legalMoves:
@@ -265,6 +295,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
                 actionList.append({'action': action, 'value': value})
                 bestValue = max(bestValue, value)
 
+            # Choose it from the list
             index = 0
             for i in range(len(actionList)):
                 if actionList[i]['value'] == bestValue:
@@ -273,10 +304,13 @@ class MinimaxAgent(MultiAgentSearchAgent):
 
             return actionList[index]
 
+
         def minValue(state, depth, agentIndex):
+            """ Function of Min-Value """
+            # Similar to maxValue, but opposite logic
+
             legalMoves = state.getLegalActions(agentIndex)
             agentNum = state.getNumAgents()
-            # print '(minValue-- agent: %d, depth: %d)' % (agentIndex, depth)
 
             if agentIndex == agentNum - 1:
                 nextAgentIndex = 0
@@ -300,14 +334,21 @@ class MinimaxAgent(MultiAgentSearchAgent):
             return actionList[index]
 
 
-        # Stop and wait for a while
-        result = minimax(gameState, self.depth, 0)
+        # start min-max and get the result
+        agentNum = gameState.getNumAgents()
+        result = minimax(gameState, self.depth*agentNum, 0)
         actionEval = result['value']
         actionMove = result['action']
+
+        # Debugging output
         # print 'Final: %s, eval: %f' % (actionMove, actionEval)
+
+        # Stop and wait for a while
         # raw_input() 
-        return actionMove
         
+        # return action
+        return actionMove
+
         util.raiseNotDefined()
 
 class AlphaBetaAgent(MultiAgentSearchAgent):

@@ -234,7 +234,79 @@ class MinimaxAgent(MultiAgentSearchAgent):
             Returns the total number of agents in the game
         """
         
-        "[Project 3] YOUR CODE HERE"        
+        "[Project 3] YOUR CODE HERE" 
+
+        def minimax(state, depth, agentIndex):
+            agentNum = state.getNumAgents()
+            
+            if depth == 0 or state.isLose() or state.isWin():
+                return {'value': self.evaluationFunction(state)}
+
+            if agentIndex == 0:
+                return maxValue(state, depth, agentIndex)
+            else:
+                return minValue(state, depth, agentIndex)
+
+        def maxValue(state, depth, agentIndex):
+            legalMoves = state.getLegalActions(agentIndex)
+            agentNum = state.getNumAgents()
+            # print '(maxValue-- agent: %d, depth: %d)' % (agentIndex, depth)
+
+            if agentIndex == agentNum - 1:
+                nextAgentIndex = 0
+            else:
+                nextAgentIndex = agentIndex + 1
+
+            bestValue = -10000
+            actionList = []
+            for action in legalMoves:
+                successorState = state.generateSuccessor(agentIndex, action)
+                value = minimax(successorState, depth-1, nextAgentIndex)['value']
+                actionList.append({'action': action, 'value': value})
+                bestValue = max(bestValue, value)
+
+            index = 0
+            for i in range(len(actionList)):
+                if actionList[i]['value'] == bestValue:
+                    index = i
+                    break
+
+            return actionList[index]
+
+        def minValue(state, depth, agentIndex):
+            legalMoves = state.getLegalActions(agentIndex)
+            agentNum = state.getNumAgents()
+            # print '(minValue-- agent: %d, depth: %d)' % (agentIndex, depth)
+
+            if agentIndex == agentNum - 1:
+                nextAgentIndex = 0
+            else:
+                nextAgentIndex = agentIndex + 1
+
+            bestValue = 10000
+            actionList = []
+            for action in legalMoves:
+                successorState = state.generateSuccessor(agentIndex, action)
+                value = minimax(successorState, depth-1, nextAgentIndex)['value']
+                actionList.append({'action': action, 'value': value})
+                bestValue = min(bestValue, value)
+
+            index = 0
+            for i in range(len(actionList)):
+                if actionList[i]['value'] == bestValue:
+                    index = i
+                    break
+
+            return actionList[index]
+
+
+        # Stop and wait for a while
+        result = minimax(gameState, self.depth, 0)
+        actionEval = result['value']
+        actionMove = result['action']
+        # print 'Final: %s, eval: %f' % (actionMove, actionEval)
+        # raw_input() 
+        return actionMove
         
         util.raiseNotDefined()
 

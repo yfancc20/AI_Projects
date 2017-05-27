@@ -202,6 +202,7 @@ class ReflexAgent(Agent):
   
         # return final score      
         return evalScore
+        
 
 def scoreEvaluationFunction(currentGameState):
     """
@@ -349,7 +350,6 @@ class MinimaxAgent(MultiAgentSearchAgent):
         # return action
         return actionMove
 
-        util.raiseNotDefined()
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
@@ -461,7 +461,6 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
 
         return actionMove  
         
-        util.raiseNotDefined()
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
@@ -478,7 +477,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         "*** YOUR CODE HERE ***"
         """ Functions of Expectimax """
         def expectimax(state, depth, agentIndex):
-            """ Min-Max head function"""
+            """ Expectimax head function"""
 
             agentNum = state.getNumAgents()
 
@@ -525,13 +524,12 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
 
 
         def expValue(state, depth, agentIndex):
-            """ Function of Min-Value """
-            # Similar to maxValue, but opposite logic
+            """ Function of Exp-Value """
 
             legalMoves = state.getLegalActions(agentIndex)
             agentNum = state.getNumAgents()
 
-            # the probability
+            # the probability (ghost's action is random)
             legalCount = len(legalMoves)
             probability = 1.0 / legalCount
 
@@ -540,6 +538,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
             else:
                 nextAgentIndex = agentIndex + 1
 
+            # bestValue: expectic value of a ghost
             bestValue = 0
             actionList = []
             for action in legalMoves:
@@ -550,14 +549,13 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
             return {'value': bestValue}
 
 
-        # start min-max and get the result
+        # start searching and get the result
         agentNum = gameState.getNumAgents()
         result = expectimax(gameState, self.depth*agentNum, 0)
         actionEval = result['value']
         actionMove = result['action']
 
         return actionMove
-        util.raiseNotDefined()
 
 def betterEvaluationFunction(currentGameState):
     """

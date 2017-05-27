@@ -202,7 +202,7 @@ class ReflexAgent(Agent):
   
         # return final score      
         return evalScore
-        
+
 
 def scoreEvaluationFunction(currentGameState):
     """
@@ -459,6 +459,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         actionEval = result['value']
         actionMove = result['action']
 
+        # raw_input()
         return actionMove  
         
 
@@ -563,9 +564,138 @@ def betterEvaluationFunction(currentGameState):
       evaluation function (question 5).
 
       DESCRIPTION: <write something here so we know what you did>
+
+    
+    There are 8 features we choose to formulate the evaluation function:
+    1: current state
+        win or lose
+    2: current score
+        current state's score
+    3. number of current food
+    4. distance from closet food
+    5. number of current capsules
+    6. distance from closet capsule
+    7. distance from closet active ghost
+    8. distance from closet scared ghost
+
     """
     
-    "[Project 3] YOUR CODE HERE"    
+    "[Project 3] YOUR CODE HERE"
+    # Position Information 
+    curPos = currentGameState.getPacmanPosition()
+    curX, curY = [curPos[0], curPos[1]]
+
+    # Ghost Information
+    ghostState = currentGameState.getGhostStates()
+
+    def featureState(state):
+        # Win, return 100
+        # Lose, return -100
+        # Nothing, return 0
+        if state.isWin():
+            return 100
+        elif state.isLose():
+            return -100
+        
+        return 0
+
+
+    def featureScore(state):
+        # return current score
+        return state.getScore()
+
+
+    def featureScared(state, curX, curY, ghostState):
+        # return distance from closest scared ghost
+        minDistance = 0
+        for ghost in ghostState:
+            if ghost.scaredTimer:
+                ghostX = ghost.getPosition()[0]
+                ghostY = ghost.getPosition()[1]
+                distance = -(abs(curX - ghostX) + abs(curY - ghostY))
+                minDistance = min(minDistance, distance)
+
+        return -minDistance
+
+
+    def featureGhost(state, curX, curY, ghostState):
+        # return distance from closest active ghost
+        minDistance = 0
+        for ghost in ghostState:
+            if not ghost.scaredTimer:
+                ghostX = ghost.getPosition()[0]
+                ghostY = ghost.getPosition()[1]
+                distance = -(abs(curX - ghostX) + abs(curY - ghostY))
+                minDistance = min(minDistance, distance)
+        if minDistance == 0:
+            minDistance = -1
+        return -minDistance
+
+
+    def featureNumFood(state):
+        # return number of food
+        return state.getNumFood()
+
+
+    def featureFood(state, curX, curY):
+        # return distance from closest food
+        foodList = currentGameState.getFood().asList()
+        minDistance = 0
+        for foodPos in foodList:
+            foodX, foodY = [foodPos[0], foodPos[1]]
+            distance = -(abs(curX - foodX) + abs(curY - foodY))
+            minDistance = min(minDistance, distance)
+
+        return -minDistance
+
+    def featureNumCapsule(state):
+        # return number of capsule
+        return len(state.getCapsules())
+
+
+    def featureCapsule(state, curX, curY):
+        # return distance from closest capsule
+        capsuleList = state.getCapsules()
+        minDistance = 0
+        for capsulePos in capsuleList:
+            capsuleX, capsuleY = [capsulePos[0], capsulePos[1]]
+            distance = -(abs(curX - capsuleX) + abs(curY - capsuleY))
+            minDistance = min(minDistance, distance)
+
+        return -minDistance
+
+
+    w1 = 3
+    f1 = featureState(currentGameState)
+    w2 = 1
+    f2 = featureScore(currentGameState)
+    w3 = -2
+    f3 = featureNumFood(currentGameState)
+    w4 = -30
+    f4 = featureNumCapsule(currentGameState)
+    w5 = -2
+    f5 = featureFood(currentGameState, curX, curY)
+    w6 = -2
+    f6 = featureCapsule(currentGameState, curX, curY)
+    w7 = -3
+    f7 = featureScared(currentGameState, curX, curY, ghostState)
+    w8 = -1
+    f8 = 1.0 / featureGhost(currentGameState, curX, curY, ghostState)
+
+
+    evalScore = w1 * f1 \
+              + w2 * f2 \
+              + w3 * f3 \
+              + w4 * f4 \
+              + w5 * f5 \
+              + w6 * f6 \
+              + w7 * f7 \
+              + w8 * f8 \
+
+    # print '1: %d| 2: %d| 3: %d| 4: %d| 5: %d| 6: %2.f 7: %d| 8: %d' % \
+          # (w1*f1, w2*f2, w3*f3, w4*f4, w5*f5, w6*f6, w7*f7, w8*f8)
+
+    return evalScore   
     
     util.raiseNotDefined()
 

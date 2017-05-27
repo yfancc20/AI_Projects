@@ -476,6 +476,87 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
           legal moves.
         """
         "*** YOUR CODE HERE ***"
+        """ Functions of Expectimax """
+        def expectimax(state, depth, agentIndex):
+            """ Min-Max head function"""
+
+            agentNum = state.getNumAgents()
+
+            # Terminal-state or maximum depth
+            if depth == 0 or state.isLose() or state.isWin():
+                return {'value': self.evaluationFunction(state)}
+
+            # Pacman: maxValue; Ghost: minValue
+            if agentIndex == 0:
+                return maxValue(state, depth, agentIndex)
+            else:
+                return expValue(state, depth, agentIndex)
+
+
+        def maxValue(state, depth, agentIndex):
+            """ Function of Max-Value"""
+
+            legalMoves = state.getLegalActions(agentIndex)
+            agentNum = state.getNumAgents()
+
+            # next agent's index
+            if agentIndex == agentNum - 1:
+                nextAgentIndex = 0
+            else:
+                nextAgentIndex = agentIndex + 1
+
+            # Find the best value(action), maximum
+            bestValue = -10000
+            actionList = []
+            for action in legalMoves:
+                successorState = state.generateSuccessor(agentIndex, action)
+                value = expectimax(successorState, depth-1, nextAgentIndex)['value']
+                actionList.append({'action': action, 'value': value})
+                bestValue = max(bestValue, value)
+
+            # Choose it from the list
+            index = 0
+            for i in range(len(actionList)):
+                if actionList[i]['value'] == bestValue:
+                    index = i
+                    break
+
+            return actionList[index]
+
+
+        def expValue(state, depth, agentIndex):
+            """ Function of Min-Value """
+            # Similar to maxValue, but opposite logic
+
+            legalMoves = state.getLegalActions(agentIndex)
+            agentNum = state.getNumAgents()
+
+            # the probability
+            legalCount = len(legalMoves)
+            probability = 1.0 / legalCount
+
+            if agentIndex == agentNum - 1:
+                nextAgentIndex = 0
+            else:
+                nextAgentIndex = agentIndex + 1
+
+            bestValue = 0
+            actionList = []
+            for action in legalMoves:
+                successorState = state.generateSuccessor(agentIndex, action)
+                value = expectimax(successorState, depth-1, nextAgentIndex)['value']
+                bestValue += probability * value
+
+            return {'value': bestValue}
+
+
+        # start min-max and get the result
+        agentNum = gameState.getNumAgents()
+        result = expectimax(gameState, self.depth*agentNum, 0)
+        actionEval = result['value']
+        actionMove = result['action']
+
+        return actionMove
         util.raiseNotDefined()
 
 def betterEvaluationFunction(currentGameState):

@@ -361,7 +361,105 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
           Returns the minimax action using self.depth and self.evaluationFunction
         """
         
-        "[Project 3] YOUR CODE HERE"        
+        "[Project 3] YOUR CODE HERE"    
+        """ Functions of Alpha-Beta Pruning """
+        def alphabeta(state, depth, alpha, beta, agentIndex):
+            """ Alpha-Beta head function"""
+
+            agentNum = state.getNumAgents()
+
+            # Terminal-state or maximum depth
+            if depth == 0 or state.isLose() or state.isWin():
+                return {'value': self.evaluationFunction(state)}
+
+            # Pacman: maxValue; Ghost: minValue
+            if agentIndex == 0:
+                return maxValue(state, depth, alpha, beta, agentIndex)
+            else:
+                return minValue(state, depth, alpha, beta, agentIndex)
+
+
+        def maxValue(state, depth, alpha, beta, agentIndex):
+            """ Function of Max-Value"""
+
+            legalMoves = state.getLegalActions(agentIndex)
+            agentNum = state.getNumAgents()
+
+            # next agent's index
+            if agentIndex == agentNum - 1:
+                nextAgentIndex = 0
+            else:
+                nextAgentIndex = agentIndex + 1
+
+            # Find the best value(action), maximum
+            bestValue = -10000
+            actionList = []
+            for action in legalMoves:
+                successorState = state.generateSuccessor(agentIndex, action)
+                value = alphabeta(successorState, depth-1, alpha, beta, nextAgentIndex)['value']
+                bestValue = max(bestValue, value)
+                alpha = max(alpha, bestValue)
+                actionList.append({'action': action, 'value': value})
+
+                # pruning 
+                # original logic of alogrithm is beta <= alpha
+                # but it would fail unless I changed it to <
+                if beta < alpha:
+                    break
+
+            # Choose it from the list
+            index = 0
+            for i in range(len(actionList)):
+                if actionList[i]['value'] == bestValue:
+                    index = i
+                    break
+
+            return actionList[index]
+
+
+        def minValue(state, depth, alpha, beta, agentIndex):
+            """ Function of Min-Value """
+            # Similar to maxValue, but opposite logic
+
+            legalMoves = state.getLegalActions(agentIndex)
+            agentNum = state.getNumAgents()
+
+            if agentIndex == agentNum - 1:
+                nextAgentIndex = 0
+            else:
+                nextAgentIndex = agentIndex + 1
+
+            bestValue = 10000
+            actionList = []
+            for action in legalMoves:
+                successorState = state.generateSuccessor(agentIndex, action)
+                value = alphabeta(successorState, depth-1, alpha, beta, nextAgentIndex)['value']
+                bestValue = min(bestValue, value)
+                beta = min(beta, bestValue)
+                actionList.append({'action': action, 'value': value})
+
+                # pruning
+                # original logic of alogrithm is beta <= alpha
+                # but it would fail unless I changed it to <
+                if beta < alpha:
+                    break
+
+            index = 0
+            for i in range(len(actionList)):
+                if actionList[i]['value'] == bestValue:
+                    index = i
+                    break
+
+            return actionList[index]  
+
+
+        # start alpha-beta and get the result
+        agentNum = gameState.getNumAgents()
+        result = alphabeta(gameState, self.depth*agentNum, -10000, 10000, 0)
+        actionEval = result['value']
+        actionMove = result['action']
+
+        return actionMove  
         
         util.raiseNotDefined()
 

@@ -607,29 +607,35 @@ def betterEvaluationFunction(currentGameState):
 
     def featureScared(state, curX, curY, ghostState):
         # return distance from closest scared ghost
-        minDistance = 0
+        minDistance = 10000
         for ghost in ghostState:
             if ghost.scaredTimer:
                 ghostX = ghost.getPosition()[0]
                 ghostY = ghost.getPosition()[1]
-                distance = -(abs(curX - ghostX) + abs(curY - ghostY))
+                distance = abs(curX - ghostX) + abs(curY - ghostY)
                 minDistance = min(minDistance, distance)
+        
+        # no scared ghost
+        if minDistance == 10000:
+            minDistance = 0
 
-        return -minDistance
+        return minDistance
 
 
     def featureGhost(state, curX, curY, ghostState):
         # return distance from closest active ghost
-        minDistance = 0
+        minDistance = 10000
         for ghost in ghostState:
             if not ghost.scaredTimer:
                 ghostX = ghost.getPosition()[0]
                 ghostY = ghost.getPosition()[1]
-                distance = -(abs(curX - ghostX) + abs(curY - ghostY))
+                distance = abs(curX - ghostX) + abs(curY - ghostY)
                 minDistance = min(minDistance, distance)
-        if minDistance == 0:
-            minDistance = -1
-        return -minDistance
+
+        if minDistance == 10000 or minDistance == 0:
+            minDistance = 0.1
+
+        return minDistance
 
 
     def featureNumFood(state):
@@ -640,13 +646,16 @@ def betterEvaluationFunction(currentGameState):
     def featureFood(state, curX, curY):
         # return distance from closest food
         foodList = currentGameState.getFood().asList()
-        minDistance = 0
+        minDistance = 10000
         for foodPos in foodList:
             foodX, foodY = [foodPos[0], foodPos[1]]
-            distance = -(abs(curX - foodX) + abs(curY - foodY))
+            distance = abs(curX - foodX) + abs(curY - foodY)
             minDistance = min(minDistance, distance)
 
-        return -minDistance
+        if minDistance == 10000:
+            minDistance = 0
+
+        return minDistance
 
     def featureNumCapsule(state):
         # return number of capsule
@@ -656,28 +665,31 @@ def betterEvaluationFunction(currentGameState):
     def featureCapsule(state, curX, curY):
         # return distance from closest capsule
         capsuleList = state.getCapsules()
-        minDistance = 0
+        minDistance = 10000
         for capsulePos in capsuleList:
             capsuleX, capsuleY = [capsulePos[0], capsulePos[1]]
-            distance = -(abs(curX - capsuleX) + abs(curY - capsuleY))
+            distance = abs(curX - capsuleX) + abs(curY - capsuleY)
             minDistance = min(minDistance, distance)
 
-        return -minDistance
+        if minDistance == 10000:
+            minDistance = 0
+
+        return minDistance
 
 
     w1 = 3
     f1 = featureState(currentGameState)
     w2 = 1
     f2 = featureScore(currentGameState)
-    w3 = -2
+    w3 = -5
     f3 = featureNumFood(currentGameState)
-    w4 = -30
+    w4 = -35
     f4 = featureNumCapsule(currentGameState)
     w5 = -2
     f5 = featureFood(currentGameState, curX, curY)
-    w6 = -2
+    w6 = -20
     f6 = featureCapsule(currentGameState, curX, curY)
-    w7 = -3
+    w7 = -30
     f7 = featureScared(currentGameState, curX, curY, ghostState)
     w8 = -1
     f8 = 1.0 / featureGhost(currentGameState, curX, curY, ghostState)
